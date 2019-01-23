@@ -39,22 +39,24 @@ func main() {
 		panic(err)
 	}
 
-	b := broker.NewBroker(&target)
+	b := broker.NewBroker2()
 	b.Run()
 
-	fmt.Println("b.Result")
+	go func() {
+		for _, it := range target.Items {
+			b.Input <- it
+		}
+		close(b.Input)
+	}()
+
 	for {
 		select {
-		case r := <-b.Result:
-			fmt.Println(r.Url)
-		case <-b.Wait:
-			goto L
+		case output := <-b.Output:
+			fmt.Println(output.Url)
+		case <-b.Exit:
+			goto LAST
 		}
 	}
 
-L:
-	fmt.Println("target.Items")
-	for _, v := range target.Items {
-		fmt.Println(v.Url)
-	}
+LAST:
 }
