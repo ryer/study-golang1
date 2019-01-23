@@ -1,8 +1,9 @@
 
 ##
-# make  => テストと全リリースビルド
-# make darwin  => darwin用リリースビルド
-# DEBUG=1 make darwin  => darwin用デバッグビルド
+# make                                     テストと全リリースビルド
+# make darwin                              darwin用リリースビルド
+# make DEBUG=1 darwin                      darwin用デバッグビルド
+# make ARGS="main.go -arg1 -arg2=Xyz" run  即時実行
 ##
 
 NAME := study-golang1
@@ -91,4 +92,8 @@ clean:
 	-rm -rf target/*
 	-rm -rf build/*
 
-.PHONY: all linux darwin windows xunit vet test fmt clean
+# 実行します
+run:
+	@ $(GO) run $(BUILD_OPTIONS) $(ARGS)
+
+.PHONY: all linux darwin windows xunit vet test fmt clean run
