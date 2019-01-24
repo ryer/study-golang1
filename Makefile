@@ -54,7 +54,7 @@ target/$(BUILD_MODE)/$(NAME)-darwin-$(GOARCH): $(GOSRC)
 	GOOS=darwin GOARCH=$(GOARCH) $(GO4DARWIN) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-darwin-$(GOARCH)
 
 target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH).exe: $(GOSRC)
-	GOOS=windows GOARCH=$(GOARCH) $(GO4WINDOWS) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH)
+	GOOS=windows GOARCH=$(GOARCH) $(GO4WINDOWS) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH).exe
 
 target/tests.xml: $(GOSRC)
 	$(GO) build -o build/bin/go2xunit github.com/tebeka/go2xunit
