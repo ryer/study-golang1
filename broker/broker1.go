@@ -13,11 +13,11 @@ type Broker1 struct {
 	work   ItemWork
 	mtx    sync.Mutex
 	cur    int
-	input  *data.Data
+	input  data.Data
 	output chan data.Item
 }
 
-func NewBroker1(input *data.Data) *Broker1 {
+func NewBroker1(input data.Data) *Broker1 {
 	b := Broker1{}
 	b.input = input
 	b.output = make(chan data.Item)
@@ -57,7 +57,13 @@ func (b *Broker1) startWorker() {
 			b.cur++
 			b.mtx.Unlock()
 
-			b.output <- b.work(it)
+			result, err := b.work(it)
+			if nil != err {
+				b.wg.Done()
+				return
+			}
+
+			b.output <- result
 		}
 	}()
 }

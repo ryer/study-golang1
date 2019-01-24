@@ -45,7 +45,11 @@ func (b *Broker2) startWorker() {
 	b.wg.Add(1)
 	go func() {
 		for it := range b.input {
-			b.output <- b.work(it)
+			result, err := b.work(it)
+			if nil != err {
+				break
+			}
+			b.output <- result
 		}
 		b.wg.Done()
 	}()

@@ -75,6 +75,7 @@ xunit: target/tests.xml
 
 # コード検査を実施します
 vet:
+	$(GO) vet -shadow -shadowstrict $(BUILD_OPTIONS) ./...
 	$(GO) vet $(BUILD_OPTIONS) ./...
 
 # 単体テストを実施します

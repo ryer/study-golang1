@@ -11,11 +11,11 @@ func TestBroker1_Invoke(t *testing.T) {
 		{Url: "https://gege"},
 	}}
 
-	b := NewBroker1(&target)
+	b := NewBroker1(target)
 
-	b.Invoke(func(it data.Item) data.Item {
+	b.Invoke(func(it data.Item) (data.Item, error) {
 		it.Url = strings.Replace(it.Url, "/gege", "/Xyz", -1)
-		return it
+		return it, nil
 	})
 
 	it := <-b.Output()

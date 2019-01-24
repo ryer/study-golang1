@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"study-golang1/broker"
 	"study-golang1/data"
+	"study-golang1/image_counter"
 )
 
 var (
@@ -38,9 +38,14 @@ func main() {
 		b = broker2(target)
 	}
 
-	b.Invoke(func(it data.Item) data.Item {
-		it.Url = strings.Replace(it.Url, "https://", "/", -1)
-		return it
+	b.Invoke(func(it data.Item) (data.Item, error) {
+		cl := image_counter.NewClient(nil)
+		cnt, err := cl.CountImages(it.Url)
+		if nil != err {
+			return data.Item{}, err
+		}
+		it.Url = fmt.Sprintf("(%d)%s", cnt, it.Url)
+		return it, nil
 	})
 
 	for it := range b.Output() {
@@ -48,11 +53,11 @@ func main() {
 	}
 }
 
-func broker1(target *data.Data) broker.IBroker {
+func broker1(target data.Data) broker.IBroker {
 	return broker.NewBroker1(target)
 }
 
-func broker2(target *data.Data) broker.IBroker {
+func broker2(target data.Data) broker.IBroker {
 	input := make(chan data.Item)
 	go func() {
 		for _, it := range target.Items {
@@ -64,7 +69,7 @@ func broker2(target *data.Data) broker.IBroker {
 	return broker.NewBroker2(input)
 }
 
-func loadJson(jsonFile string) *data.Data {
+func loadJson(jsonFile string) data.Data {
 	fileData, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
 		panic(err)
@@ -76,5 +81,5 @@ func loadJson(jsonFile string) *data.Data {
 		panic(err)
 	}
 
-	return &target
+	return target
 }

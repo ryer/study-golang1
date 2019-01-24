@@ -21,9 +21,9 @@ func TestBroker2_Invoke(t *testing.T) {
 
 	b := NewBroker2(input)
 
-	b.Invoke(func(it data.Item) data.Item {
+	b.Invoke(func(it data.Item) (data.Item, error) {
 		it.Url = strings.Replace(it.Url, "/gege", "/Xyz", -1)
-		return it
+		return it, nil
 	})
 
 	it := <-b.Output()
