@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"fmt"
 	"strings"
 	"study-golang1/data"
 	"testing"
@@ -21,5 +22,10 @@ func TestBroker1_Invoke(t *testing.T) {
 	it := <-b.Output()
 	if "https://Xyz" != it.Url {
 		t.Fatalf("Wrong output. expected=%q, got=%q", "https://Xyz", it.Url)
+	}
+
+	it, ok := <-b.Output()
+	if (ok) {
+		t.Fatalf("Illegal fetch. expected=%s, got=%s", fmt.Sprint(false), fmt.Sprint(ok))
 	}
 }
