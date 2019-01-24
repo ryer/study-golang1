@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"study-golang1/broker"
 	"study-golang1/data"
 )
@@ -28,7 +29,43 @@ func main() {
 		return
 	}
 
-	fileData, err := ioutil.ReadFile(*jsonFile)
+	target := loadJson(*jsonFile)
+
+	var b broker.IBroker
+	if false {
+		b = broker1(target)
+	} else {
+		b = broker2(target)
+	}
+
+	b.Invoke(func(it data.Item) data.Item {
+		it.Url = strings.Replace(it.Url, "https://", "/", -1)
+		return it
+	})
+
+	for it := range b.Output() {
+		fmt.Println(it.Url)
+	}
+}
+
+func broker1(target *data.Data) broker.IBroker {
+	return broker.NewBroker1(target)
+}
+
+func broker2(target *data.Data) broker.IBroker {
+	input := make(chan data.Item)
+	go func() {
+		for _, it := range target.Items {
+			input <- it
+		}
+		close(input)
+	}()
+
+	return broker.NewBroker2(input)
+}
+
+func loadJson(jsonFile string) *data.Data {
+	fileData, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
 		panic(err)
 	}
@@ -39,24 +76,5 @@ func main() {
 		panic(err)
 	}
 
-	b := broker.NewBroker2()
-	b.Run()
-
-	go func() {
-		for _, it := range target.Items {
-			b.Input <- it
-		}
-		close(b.Input)
-	}()
-
-	for {
-		select {
-		case output := <-b.Output:
-			fmt.Println(output.Url)
-		case <-b.Exit:
-			goto LAST
-		}
-	}
-
-LAST:
+	return &target
 }

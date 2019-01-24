@@ -1,52 +1,52 @@
 package broker
 
+// channelから読むタイプ
+
 import (
-	"strings"
+	"runtime"
 	"study-golang1/data"
 	"sync"
 )
 
 type Broker2 struct {
 	wg     sync.WaitGroup
-	mtx    sync.Mutex
-	cur    int
-	Input  chan data.Item
-	Output chan data.Item
-	Exit   chan struct{}
+	work   ItemWork
+	input  chan data.Item
+	output chan data.Item
 }
 
-func NewBroker2() *Broker2 {
+func NewBroker2(input chan data.Item) *Broker2 {
 	b := Broker2{}
-	b.Input = make(chan data.Item)
-	b.Output = make(chan data.Item)
-	b.Exit = make(chan struct{})
-
+	b.input = input
+	b.output = make(chan data.Item)
 	return &b
 }
 
-func (b *Broker2) Run() {
+func (b *Broker2) Invoke(work ItemWork) {
+	b.work = work
+	b.run()
+}
+
+func (b *Broker2) Output() chan data.Item {
+	return b.output
+}
+
+func (b *Broker2) run() {
 	go func() {
-		for i := 0; i < 5; i++ {
+		for i := 0; i < runtime.NumCPU(); i++ {
 			b.startWorker()
 		}
 		b.wg.Wait()
-		close(b.Exit)
+		close(b.output)
 	}()
 }
 
 func (b *Broker2) startWorker() {
 	b.wg.Add(1)
 	go func() {
-		for {
-			it, ok := <-b.Input
-			if !ok {
-				b.wg.Done()
-				return
-			}
-
-			it.Url = strings.Replace(it.Url, "https://", "/", -1)
-
-			b.Output <- it
+		for it := range b.input {
+			b.output <- b.work(it)
 		}
+		b.wg.Done()
 	}()
 }
