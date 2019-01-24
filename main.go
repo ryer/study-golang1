@@ -38,19 +38,21 @@ func main() {
 		b = broker2(target)
 	}
 
-	b.Invoke(func(it data.Item) (data.Item, error) {
-		cl := image_counter.NewClient(nil)
-		cnt, err := cl.CountImages(it.Url)
-		if nil != err {
-			return data.Item{}, err
-		}
-		it.Url = fmt.Sprintf("(%d)%s", cnt, it.Url)
-		return it, nil
-	})
+	b.Invoke(work)
 
 	for it := range b.Output() {
 		fmt.Println(it.Url)
 	}
+}
+
+func work(it data.Item) (data.Item, error) {
+	cl := image_counter.NewClient(nil)
+	cnt, err := cl.CountImages(it.Url)
+	if nil != err {
+		return data.Item{}, err
+	}
+	it.Url = fmt.Sprintf("(%d)%s", cnt, it.Url)
+	return it, nil
 }
 
 func broker1(target data.Data) broker.IBroker {
