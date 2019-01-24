@@ -41,7 +41,7 @@ endif
 
 GOSRC := $(shell find . -type f -name '*.go')
 
-all: vet test linux darwin windows
+all: test linux darwin windows
 
 ##
 # ビルド成果物

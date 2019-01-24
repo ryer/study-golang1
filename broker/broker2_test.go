@@ -33,7 +33,7 @@ func TestBroker2_Invoke(t *testing.T) {
 	}
 
 	it, ok := <-b.Output()
-	if (ok) {
+	if ok {
 		t.Fatalf("Illegal fetch. expected=%s, got=%s", fmt.Sprint(false), fmt.Sprint(ok))
 	}
 }
