@@ -8,9 +8,7 @@ DB接続とかgolangアプリサーバー（？）の練習用
 
 
 ```sh
-$ docker-compose up -d
+$ ./app.sh -echo-port 9595
 
-$ docker-compose exec app /app/target/debug/study-golang1-linux-amd64 -echo-port 9595
-
-$ docker-compose exec app /app/target/debug/study-golang1-linux-amd64 -url-list /app/image_counter/testdata/data1.json
+$ ./app.sh -url-list /app/image_counter/testdata/data1.json
 ```
