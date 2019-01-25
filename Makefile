@@ -11,17 +11,6 @@ VERSION := v0.0.1
 REVISION := $(shell git rev-parse --short HEAD)
 
 ##
-# 使用するgoコマンドの決定。バージョンとかOS環境とかいろいろあって自動判定はあきらめました。
-##
-
-NATIVE_GO := GOPATH= GO111MODULE=on go
-DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e GO111MODULE=on golang:1.11 go
-GO := $(NATIVE_GO)
-GO4LINUX := $(DOCKER_GO)
-GO4DARWIN := $(NATIVE_GO)
-GO4WINDOWS := $(DOCKER_GO)
-
-##
 # ビルドオプション
 ##
 
@@ -34,12 +23,29 @@ LDFLAGS := -X 'main.Name=$(NAME)' \
 ifeq ($(DEBUG), 1)
 	BUILD_OPTIONS := -race -tags DEBUG -ldflags="$(LDFLAGS)"
 	BUILD_MODE := debug
+	CGO_ENABLED := 1
 else
 	BUILD_OPTIONS := -ldflags="-s -w $(LDFLAGS)"
 	BUILD_MODE := release
+	CGO_ENABLED := 0
 endif
 
-GOSRC := $(shell find . -type f -name '*.go')
+##
+# 使用するgoコマンドの決定。バージョンとかOS環境とかいろいろあって自動判定はあきらめました。
+##
+
+NATIVE_GO := GOPATH= GO111MODULE=on CGO_ENABLED=$(CGO_ENABLED) go
+DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e GO111MODULE=on -e CGO_ENABLED=$(CGO_ENABLED) golang:1.11 go
+GO := $(NATIVE_GO)
+GO4LINUX := $(DOCKER_GO)
+GO4DARWIN := $(NATIVE_GO)
+GO4WINDOWS := $(DOCKER_GO)
+
+##
+# 作業対象
+##
+
+GO_SRCS := $(shell find . -type f -name '*.go')
 
 all: test linux darwin windows
 
@@ -47,18 +53,18 @@ all: test linux darwin windows
 # ビルド成果物
 ##
 
-target/$(BUILD_MODE)/$(NAME)-linux-$(GOARCH): $(GOSRC)
+target/$(BUILD_MODE)/$(NAME)-linux-$(GOARCH): $(GO_SRCS)
 	GOOS=linux GOARCH=$(GOARCH) $(GO4LINUX) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-linux-$(GOARCH)
 
-target/$(BUILD_MODE)/$(NAME)-darwin-$(GOARCH): $(GOSRC)
+target/$(BUILD_MODE)/$(NAME)-darwin-$(GOARCH): $(GO_SRCS)
 	GOOS=darwin GOARCH=$(GOARCH) $(GO4DARWIN) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-darwin-$(GOARCH)
 
-target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH).exe: $(GOSRC)
+target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH).exe: $(GO_SRCS)
 	GOOS=windows GOARCH=$(GOARCH) $(GO4WINDOWS) build $(BUILD_OPTIONS) -o target/$(BUILD_MODE)/$(NAME)-windows-$(GOARCH).exe
 
-target/tests.xml: $(GOSRC)
-	$(GO) build -o build/bin/go2xunit github.com/tebeka/go2xunit
-	$(GO) test -v ./... 2>&1 | build/bin/go2xunit -output target/tests.xml
+target/tests.xml: $(GO_SRCS)
+	$(GO) build -o ./build/bin/go2xunit github.com/tebeka/go2xunit
+	$(GO) test -v ./... 2>&1 | ./build/bin/go2xunit -output target/tests.xml
 	$(GO) mod tidy # 現状のtidyは実行ファイルへの依存を検知できないためここでgo.modをrevertする
 
 ##
@@ -75,7 +81,7 @@ xunit: target/tests.xml
 
 # コード検査を実施します
 vet:
-	$(GO) vet -shadow -shadowstrict $(BUILD_OPTIONS) ./...
+	$(GO) vet -shadow $(BUILD_OPTIONS) ./...
 	$(GO) vet $(BUILD_OPTIONS) ./...
 
 # 単体テストを実施します
@@ -91,7 +97,7 @@ fmt:
 # ビルド生成ファイルを全掃除します
 clean:
 	-rm -rf target/*
-	-rm -rf build/*
+	-rm -rf ./build/*
 
 # 実行します
 run:

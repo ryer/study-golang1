@@ -1,24 +1,23 @@
-package broker
+package image_counter
 
 // channelから読むタイプ
 
 import (
 	"runtime"
-	"study-golang1/data"
 	"sync"
 )
 
 type Broker2 struct {
 	wg     sync.WaitGroup
 	work   ItemWork
-	input  chan data.Item
-	output chan data.Item
+	input  chan Item
+	output chan Item
 }
 
-func NewBroker2(input chan data.Item) *Broker2 {
+func NewBroker2(input chan Item) *Broker2 {
 	b := Broker2{}
 	b.input = input
-	b.output = make(chan data.Item)
+	b.output = make(chan Item)
 	return &b
 }
 
@@ -27,7 +26,7 @@ func (b *Broker2) Invoke(work ItemWork) {
 	b.run()
 }
 
-func (b *Broker2) Output() chan data.Item {
+func (b *Broker2) Output() chan Item {
 	return b.output
 }
 
@@ -47,7 +46,7 @@ func (b *Broker2) startWorker() {
 		for it := range b.input {
 			result, err := b.work(it)
 			if nil != err {
-				break
+				panic(err)
 			}
 			b.output <- result
 		}

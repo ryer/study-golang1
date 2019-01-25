@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  app:
+    hostname: 'app.vm'
+    build: './docker/app'
+    ports:
+      - '9595:9595'
+    depends_on:
+      - 'db'
+    volumes:
+      - '.:/app'
+    entrypoint: '/app/target/debug/study-golang1-linux-amd64 -socks4-port 9595'
+
+  db:
+    hostname: 'db.vm'
+    image: 'mysql:5.7'
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - './docker/db/initdb.d:/docker-entrypoint-initdb.d:ro'
+      - './docker/db/conf.d:/etc/mysql/conf.d:ro'

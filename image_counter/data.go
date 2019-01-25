@@ -1,4 +1,4 @@
-package data
+package image_counter
 
 type Data struct {
 	Items []Item

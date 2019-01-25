@@ -1,10 +1,9 @@
-package broker
+package image_counter
 
 // Mutexで守りつつ1つずつ消費していくタイプ
 
 import (
 	"runtime"
-	"study-golang1/data"
 	"sync"
 )
 
@@ -13,14 +12,14 @@ type Broker1 struct {
 	work   ItemWork
 	mtx    sync.Mutex
 	cur    int
-	input  data.Data
-	output chan data.Item
+	input  Data
+	output chan Item
 }
 
-func NewBroker1(input data.Data) *Broker1 {
+func NewBroker1(input Data) *Broker1 {
 	b := Broker1{}
 	b.input = input
-	b.output = make(chan data.Item)
+	b.output = make(chan Item)
 	return &b
 }
 
@@ -29,7 +28,7 @@ func (b *Broker1) Invoke(work ItemWork) {
 	b.run()
 }
 
-func (b *Broker1) Output() chan data.Item {
+func (b *Broker1) Output() chan Item {
 	return b.output
 }
 

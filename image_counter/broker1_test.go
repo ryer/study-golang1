@@ -1,20 +1,19 @@
-package broker
+package image_counter
 
 import (
 	"fmt"
 	"strings"
-	"study-golang1/data"
 	"testing"
 )
 
 func TestBroker1_Invoke(t *testing.T) {
-	target := data.Data{Items: []data.Item{
+	target := Data{Items: []Item{
 		{Url: "https://gege"},
 	}}
 
 	b := NewBroker1(target)
 
-	b.Invoke(func(it data.Item) (data.Item, error) {
+	b.Invoke(func(it Item) (Item, error) {
 		it.Url = strings.Replace(it.Url, "/gege", "/Xyz", -1)
 		return it, nil
 	})
