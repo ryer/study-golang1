@@ -10,7 +10,7 @@ services:
       - 'db'
     volumes:
       - '.:/app'
-    entrypoint: '/app/target/debug/study-golang1-linux-amd64 -echo-port 9595'
+    entrypoint: 'tail -f /dev/null'
 
   db:
     hostname: 'db.vm'
