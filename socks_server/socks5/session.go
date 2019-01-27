@@ -1,6 +1,7 @@
 package socks5
 
 import (
+	"fmt"
 	"net"
 	"study-golang1/socks_server/relay"
 )
@@ -31,7 +32,7 @@ type Session struct {
 }
 
 func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
-	return nil, nil
+	return nil, fmt.Errorf("SOCKS5 not implemented")
 }
 
 func (s *Session) Version() string {
