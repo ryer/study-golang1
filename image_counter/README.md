@@ -1,3 +1,3 @@
 # image_counter
 
-json, goroutin, http の練習とか
+json, goroutine, http の練習とか
