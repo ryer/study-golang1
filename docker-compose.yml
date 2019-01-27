@@ -10,7 +10,6 @@ services:
       - 'db'
     volumes:
       - '.:/app'
-#    entrypoint: 'tail -f /dev/null'
 
   db:
     hostname: 'db.vm'
