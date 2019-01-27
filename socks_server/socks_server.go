@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"study-golang1/socks_server/relay"
 	"study-golang1/socks_server/socks4"
+	"study-golang1/socks_server/socks5"
 	"sync"
 )
 
@@ -79,12 +80,19 @@ func (s *SocksServer) handleClient(conn *net.TCPConn) {
 	sess, err := s.negotiate(conn)
 	if err != nil {
 		log.Println(err)
+		err := conn.Close()
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
 	debugPrint()
 
-	log.Printf("relay: %s -> %s", sess.Relay().Src().RemoteAddr(), sess.Relay().Dest().RemoteAddr())
+	log.Printf(
+		"socks%d relay: %s -> %s",
+		sess.Version(), sess.Relay().Src().RemoteAddr(), sess.Relay().Dest().RemoteAddr(),
+	)
 	sess.Relay().Start()
 }
 
@@ -98,18 +106,21 @@ func (s *SocksServer) negotiate(conn *net.TCPConn) (ISocksSession, error) {
 	if sz == 0 {
 		return nil, fmt.Errorf("unexpected close")
 	}
-	vn := temp[0]
+	ver := temp[0]
 
 	var sess ISocksSession
-	if vn == socks4.VnRequestSocks4 {
-		sess, err = socks4.Negotiate(vn, conn)
+	if ver == socks4.VnRequestSocks4 {
+		sess, err = socks4.Negotiate(ver, conn)
 		if err != nil {
 			return nil, err
 		}
-	} else if vn == 5 {
-
+	} else if ver == socks5.VerRequestSocks5 {
+		sess, err = socks5.Negotiate(ver, conn)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		return nil, fmt.Errorf("unexpected version (%d)", vn)
+		return nil, fmt.Errorf("unexpected version (%d)", ver)
 	}
 
 	return sess, nil

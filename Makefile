@@ -99,7 +99,7 @@ clean:
 	-rm -rf target/*
 	-rm -rf ./build/*
 
-# 実行します
+# 即時実行します
 run:
 	@ $(GO) run $(BUILD_OPTIONS) $(ARGS)
 

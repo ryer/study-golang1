@@ -23,15 +23,11 @@ type Session struct {
 	dstport uint16 // 2byte
 	dstip   net.IP // 4byte
 	userid  string // null terminated string
+	domain  string // null terminated string
 	relay   *relay.Relay
 }
 
 func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
-	_, err := conn.Write([]byte{VnResponseSocks4})
-	if nil != err {
-		return nil, err
-	}
-
 	errorResult := func(err error) (*Session, error) {
 		_ = sendResponse(conn, CdReject, uint16(0), net.IP{})
 		return nil, fmt.Errorf("%s", err)
@@ -73,6 +69,22 @@ func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
 		return errorResult(fmt.Errorf("%s < %s", err, "failed to recv userid"))
 	}
 
+	// dstip==0.0.0.x : SOCKS4A : 名前解決をsocks serverで行うモードです。
+	var domain string
+	if dstip[0] == 0 && dstip[1] == 0 && dstip[2] == 0 && dstip[3] != 0 {
+		var err4a error
+		domain, err4a = reader.ReadString(0) // NULL TERMINATED
+		if err4a != nil {
+			return errorResult(fmt.Errorf("%s < %s", err4a, "failed to recv domain"))
+		}
+
+		addr, err4a := net.ResolveIPAddr("ip4", domain)
+		if err4a != nil {
+			return errorResult(fmt.Errorf("%s < %s (%s)", err4a, "failed to resolve domain", domain))
+		}
+		dstip = addr.IP
+	}
+
 	dstConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", dstip, dstport))
 	if err != nil {
 		return errorResult(fmt.Errorf("%s < %s", err, "failed to connect"))
@@ -84,7 +96,7 @@ func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
 	}
 
 	relayConn := relay.NewRelay(conn, dstConn.(*net.TCPConn))
-	sess := &Session{vn, cd, dstport, dstip, userid, relayConn}
+	sess := &Session{vn, cd, dstport, dstip, userid, domain, relayConn}
 
 	return sess, nil
 }
@@ -98,12 +110,20 @@ func (s *Session) Relay() *relay.Relay {
 }
 
 func sendResponse(conn net.Conn, cd byte, dstport uint16, dstip net.IP) error {
-	n, err := conn.Write([]byte{cd})
+	n, err := conn.Write([]byte{VnResponseSocks4})
 	if nil != err {
 		return err
 	}
 	if n != 1 {
-		return fmt.Errorf("unexpected close (%d)", n)
+		return fmt.Errorf("unexpected close (vn:%d)", n)
+	}
+
+	n, err = conn.Write([]byte{cd})
+	if nil != err {
+		return err
+	}
+	if n != 1 {
+		return fmt.Errorf("unexpected close (cd:%d)", n)
 	}
 
 	b := []byte{0, 0}
@@ -113,7 +133,7 @@ func sendResponse(conn net.Conn, cd byte, dstport uint16, dstip net.IP) error {
 		return err
 	}
 	if n != 2 {
-		return fmt.Errorf("unexpected close (%d)", n)
+		return fmt.Errorf("unexpected close (dstport:%d)", n)
 	}
 
 	n, err = conn.Write(dstip)
@@ -121,7 +141,7 @@ func sendResponse(conn net.Conn, cd byte, dstport uint16, dstip net.IP) error {
 		return err
 	}
 	if n != 4 {
-		return fmt.Errorf("unexpected close (%d)", n)
+		return fmt.Errorf("unexpected close (dstip:%d)", n)
 	}
 
 	return nil
