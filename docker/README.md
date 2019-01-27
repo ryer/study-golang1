@@ -8,7 +8,7 @@ DB接続とかgolangアプリサーバー（？）の練習用
 
 
 ```sh
-$ ./app.sh -echo-port 9595
+$ docker/run.sh -socks4-port 9595
 
-$ ./app.sh -url-list /app/image_counter/testdata/data1.json
+$ docker/run.sh -url-list /app/image_counter/testdata/data1.json
 ```
