@@ -6,7 +6,7 @@ import (
 	"study-golang1/echosrv"
 	"study-golang1/image_counter"
 	"study-golang1/monkey"
-	"study-golang1/socks4server"
+	"study-golang1/socks_server"
 )
 
 var (
@@ -27,7 +27,7 @@ func main() {
 	if *urlListJsonFile != "" {
 		image_counter.Main(*urlListJsonFile)
 	} else if *socks4port != 0 {
-		socks4server.Main(*socks4port)
+		socks_server.Main(*socks4port)
 	} else if *useMonkey {
 		monkey.Main()
 	} else if *echoPort != 0 {
