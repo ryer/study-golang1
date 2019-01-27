@@ -24,7 +24,7 @@ var (
 )
 
 type ISocksSession interface {
-	Version() int
+	Version() string
 	Relay() *relay.Relay
 }
 
@@ -90,7 +90,7 @@ func (s *SocksServer) handleClient(conn *net.TCPConn) {
 	debugPrint()
 
 	log.Printf(
-		"socks%d relay: %s -> %s",
+		"socks%s relay: %s -> %s",
 		sess.Version(), sess.Relay().Src().RemoteAddr(), sess.Relay().Dest().RemoteAddr(),
 	)
 	sess.Relay().Start()

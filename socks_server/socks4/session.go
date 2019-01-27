@@ -70,7 +70,7 @@ func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
 	}
 
 	// dstip==0.0.0.x : SOCKS4A : 名前解決をsocks serverで行うモードです。
-	var domain string
+	domain := ""
 	if dstip[0] == 0 && dstip[1] == 0 && dstip[2] == 0 && dstip[3] != 0 {
 		var err4a error
 		domain, err4a = reader.ReadString(0) // NULL TERMINATED
@@ -101,8 +101,12 @@ func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
 	return sess, nil
 }
 
-func (s *Session) Version() int {
-	return int(s.vn)
+func (s *Session) Version() string {
+	if s.domain == "" {
+		return "4A"
+	} else {
+		return "4"
+	}
 }
 
 func (s *Session) Relay() *relay.Relay {

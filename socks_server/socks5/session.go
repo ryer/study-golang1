@@ -34,8 +34,8 @@ func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
 	return nil, nil
 }
 
-func (s *Session) Version() int {
-	return int(s.ver)
+func (s *Session) Version() string {
+	return "5"
 }
 
 func (s *Session) Relay() *relay.Relay {
