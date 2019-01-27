@@ -4,23 +4,36 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"runtime"
 	"study-golang1/socks_server/relay"
 	"study-golang1/socks_server/socks4"
+	"sync"
 )
 
 type SocksServer struct {
 	proto    string
 	addr     string
 	listener *net.TCPListener
+	clientWg sync.WaitGroup
+	srcConns chan *net.TCPConn
 }
 
-type SocksSession interface {
+var (
+	maxClient = runtime.NumCPU()
+)
+
+type ISocksSession interface {
 	Version() int
-	RelayConn() *relay.Relay
+	Relay() *relay.Relay
 }
 
 func NewSocksServer(proto string, addr string) *SocksServer {
-	return &SocksServer{proto, addr, nil}
+	return &SocksServer{
+		proto:    proto,
+		addr:     addr,
+		clientWg: sync.WaitGroup{}, // 現実装だとクライアントからの出力を集約する必要がないのでこれは不要っぽい
+		srcConns: make(chan *net.TCPConn, maxClient),
+	}
 }
 
 func (s *SocksServer) Start() error {
@@ -28,36 +41,54 @@ func (s *SocksServer) Start() error {
 	if err != nil {
 		return err
 	}
-
 	s.listener = ln.(*net.TCPListener)
 
+	s.startClientHandlers()
+
 	for {
-		sess, err := s.Accept()
+		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Println(err)
-			continue
+			err := s.listener.Close()
+			if err != nil {
+				log.Println(err)
+			}
+			close(s.srcConns)
+			return err
 		}
 
-		log.Printf("client accepted: %s -> %s", sess.RelayConn().SrcConn().RemoteAddr(), sess.RelayConn().DestConn().RemoteAddr())
-		go sess.RelayConn().Start()
+		s.srcConns <- conn.(*net.TCPConn)
 	}
 }
 
-func (s *SocksServer) Accept() (SocksSession, error) {
-	srcConn, err := s.listener.Accept()
-	if err != nil {
-		return nil, err
-	}
-
-	socksConn, err := s.negotiate(srcConn.(*net.TCPConn))
-	if err != nil {
-		return nil, err
-	}
-
-	return socksConn, nil
+func (s *SocksServer) startClientHandlers() {
+	go func() {
+		for i := 0; i < maxClient; i++ {
+			s.clientWg.Add(1)
+			go func() {
+				for it := range s.srcConns {
+					s.handleClient(it)
+				}
+				s.clientWg.Done()
+			}()
+		}
+		s.clientWg.Wait()
+	}()
 }
 
-func (s *SocksServer) negotiate(conn *net.TCPConn) (SocksSession, error) {
+func (s *SocksServer) handleClient(conn *net.TCPConn) {
+	sess, err := s.negotiate(conn)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	debugPrint()
+
+	log.Printf("relay: %s -> %s", sess.Relay().Src().RemoteAddr(), sess.Relay().Dest().RemoteAddr())
+	sess.Relay().Start()
+}
+
+func (s *SocksServer) negotiate(conn *net.TCPConn) (ISocksSession, error) {
 	temp := []byte{0}
 	sz, err := conn.Read(temp)
 	if err != nil {
@@ -69,7 +100,7 @@ func (s *SocksServer) negotiate(conn *net.TCPConn) (SocksSession, error) {
 	}
 	vn := temp[0]
 
-	var sess SocksSession
+	var sess ISocksSession
 	if vn == socks4.VnRequestSocks4 {
 		sess, err = socks4.Negotiate(vn, conn)
 		if err != nil {
@@ -82,4 +113,11 @@ func (s *SocksServer) negotiate(conn *net.TCPConn) (SocksSession, error) {
 	}
 
 	return sess, nil
+}
+
+func debugPrint() {
+	log.Printf("NumGoroutine=%d", runtime.NumGoroutine())
+	stats := runtime.MemStats{}
+	runtime.ReadMemStats(&stats)
+	log.Printf("MemStats.Alloc=%d", stats.Alloc)
 }

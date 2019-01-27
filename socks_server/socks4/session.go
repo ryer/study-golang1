@@ -18,12 +18,12 @@ const (
 )
 
 type Session struct {
-	vn        byte   // 1
-	cd        byte   // 1
-	dstport   uint16 // 2byte
-	dstip     net.IP // 4byte
-	userid    string // null terminated string
-	relayConn *relay.Relay
+	vn      byte   // 1
+	cd      byte   // 1
+	dstport uint16 // 2byte
+	dstip   net.IP // 4byte
+	userid  string // null terminated string
+	relay   *relay.Relay
 }
 
 func Negotiate(vn byte, conn *net.TCPConn) (*Session, error) {
@@ -93,8 +93,8 @@ func (s *Session) Version() int {
 	return int(s.vn)
 }
 
-func (s *Session) RelayConn() *relay.Relay {
-	return s.relayConn
+func (s *Session) Relay() *relay.Relay {
+	return s.relay
 }
 
 func sendResponse(conn net.Conn, cd byte, dstport uint16, dstip net.IP) error {
