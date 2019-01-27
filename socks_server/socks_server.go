@@ -31,7 +31,7 @@ func NewSocksServer(proto string, addr string) *SocksServer {
 	return &SocksServer{
 		proto:    proto,
 		addr:     addr,
-		clientWg: sync.WaitGroup{}, // 現実装だとクライアントからの出力を集約する必要がないのでこれは不要っぽい
+		clientWg: sync.WaitGroup{}, // 現実装だとワーカーの出力を集約する必要がないのでこれは不要っぽい
 		srcConns: make(chan *net.TCPConn, maxClient),
 	}
 }
