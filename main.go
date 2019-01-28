@@ -18,7 +18,7 @@ var (
 func main() {
 	var (
 		urlListJsonFile = flag.String("url-list", "", "画像カウント先URLのJSONデータファイル")
-		socks4port      = flag.Int("socks4-port", 0, "SOCKS4サーバのポート番号")
+		socksPort      = flag.Int("socks-port", 0, "SOCKSサーバのポート番号")
 		useMonkey       = flag.Bool("use-monkey", false, "モンキー言語を使う")
 		echoPort        = flag.Int("echo-port", 0, "ECHOサーバのポート番号")
 	)
@@ -26,8 +26,8 @@ func main() {
 
 	if *urlListJsonFile != "" {
 		image_counter.Main(*urlListJsonFile)
-	} else if *socks4port != 0 {
-		socks_server.Main(*socks4port)
+	} else if *socksPort != 0 {
+		socks_server.Main(*socksPort)
 	} else if *useMonkey {
 		monkey.Main()
 	} else if *echoPort != 0 {
