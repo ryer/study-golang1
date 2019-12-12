@@ -35,7 +35,7 @@ endif
 ##
 
 NATIVE_GO := GOPATH= GO111MODULE=on CGO_ENABLED=$(CGO_ENABLED) go
-DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e GO111MODULE=on -e CGO_ENABLED=$(CGO_ENABLED) golang:1.11 go
+DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e GO111MODULE=on -e CGO_ENABLED=$(CGO_ENABLED) golang:1.13 go
 GO := $(NATIVE_GO)
 GO4LINUX := $(DOCKER_GO)
 GO4DARWIN := $(NATIVE_GO)
@@ -81,7 +81,7 @@ xunit: target/tests.xml
 
 # コード検査を実施します
 vet:
-	$(GO) vet -shadow $(BUILD_OPTIONS) ./...
+	$(GO) vet $(BUILD_OPTIONS) ./...
 	$(GO) vet $(BUILD_OPTIONS) ./...
 
 # 単体テストを実施します
