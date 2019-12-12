@@ -34,8 +34,8 @@ endif
 # 使用するgoコマンドの決定。バージョンとかOS環境とかいろいろあって自動判定はあきらめました。
 ##
 
-NATIVE_GO := GOPATH= GO111MODULE=on CGO_ENABLED=$(CGO_ENABLED) go
-DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e GO111MODULE=on -e CGO_ENABLED=$(CGO_ENABLED) golang:1.13 go
+NATIVE_GO := GOPATH= CGO_ENABLED=$(CGO_ENABLED) go
+DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e CGO_ENABLED=$(CGO_ENABLED) golang:1.13 go
 GO := $(NATIVE_GO)
 GO4LINUX := $(DOCKER_GO)
 GO4DARWIN := $(NATIVE_GO)
