@@ -17,25 +17,22 @@ REVISION := $(shell git rev-parse --short HEAD)
 GOARCH := amd64
 LDFLAGS := -X 'main.Name=$(NAME)' \
            -X 'main.Version=$(VERSION)' \
-           -X 'main.Revision=$(REVISION)' \
-           -extldflags '-static'
+           -X 'main.Revision=$(REVISION)'
 
 ifeq ($(DEBUG), 1)
 	BUILD_OPTIONS := -race -tags DEBUG -ldflags="$(LDFLAGS)"
 	BUILD_MODE := debug
-	CGO_ENABLED := 1
 else
 	BUILD_OPTIONS := -ldflags="-s -w $(LDFLAGS)"
 	BUILD_MODE := release
-	CGO_ENABLED := 0
 endif
 
 ##
 # 使用するgoコマンドの決定。バージョンとかOS環境とかいろいろあって自動判定はあきらめました。
 ##
 
-NATIVE_GO := GOPATH= CGO_ENABLED=$(CGO_ENABLED) go
-DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= -e CGO_ENABLED=$(CGO_ENABLED) golang:1.13 go
+NATIVE_GO := GOPATH= go
+DOCKER_GO := docker run -it -v "$(PWD):/go" -e GOPATH= golang:1.13 go
 GO := $(NATIVE_GO)
 GO4LINUX := $(DOCKER_GO)
 GO4DARWIN := $(NATIVE_GO)
