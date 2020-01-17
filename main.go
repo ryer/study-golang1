@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"study-golang1/db"
 	"study-golang1/echosrv"
+	gormdb "study-golang1/gorm"
 	"study-golang1/image_counter"
 	"study-golang1/monkey"
 	"study-golang1/socks_server"
@@ -23,6 +24,7 @@ func main() {
 		useMonkey       = flag.Bool("use-monkey", false, "モンキー言語を使う")
 		echoPort        = flag.Int("echo-port", 0, "ECHOサーバのポート番号")
 		dbFile          = flag.String("db-file", "", "sqlite3ファイル")
+		dbFileGorm      = flag.String("db-file-gorm", "", "sqlite3ファイル(gorm)")
 	)
 	flag.Parse()
 
@@ -36,6 +38,8 @@ func main() {
 		echosrv.Main(*echoPort)
 	} else if *dbFile != "" {
 		db.Main(*dbFile)
+	} else if *dbFileGorm != "" {
+		gormdb.Main(*dbFileGorm)
 	} else {
 		fmt.Printf("%s %s (%s)\n", Name, Version, Revision)
 		flag.Usage()

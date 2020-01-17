@@ -1,13 +1,17 @@
-package db
+package gormdb
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
+type Product struct {
+	ID   uint `gorm:"primary_key"`
+	Name string
+}
+
 func Main(dbFile string) {
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := gorm.Open("sqlite3", dbFile)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -24,10 +28,10 @@ func Main(dbFile string) {
 }
 
 // productsテーブルに指定したデータ（data）を挿入します。
-func InsertData(db *sql.DB, data []string) (err error) {
-	tx, e := db.Begin()
-	if e != nil {
-		err = errors.Wrap(e, "Failed to Begin")
+func InsertData(db *gorm.DB, data []string) (err error) {
+	tx := db.Begin()
+	if tx.Error != nil {
+		err = errors.Wrap(tx.Error, "Failed to Begin")
 		return
 	}
 
@@ -37,26 +41,15 @@ func InsertData(db *sql.DB, data []string) (err error) {
 			//noinspection GoUnhandledErrorResult
 			tx.Rollback()
 		} else {
-			err = tx.Commit()
-		}
-	}()
-
-	stmt, e := tx.Prepare(`INSERT INTO "products" ("name") VALUES (?)`)
-	if e != nil {
-		err = errors.Wrap(e, "Failed to Prepare")
-	}
-
-	defer func() {
-		e := stmt.Close()
-		if e != nil {
-			err = errors.Wrap(e, "Failed to Close")
+			err = tx.Commit().Error
 		}
 	}()
 
 	for _, v := range data {
-		_, e := stmt.Exec(v)
+		p := &Product{Name: v}
+		e := tx.Create(p).Error
 		if e != nil {
-			err = errors.Wrap(e, "Failed to Exec")
+			err = errors.Wrap(e, "Failed to Create")
 			break
 		}
 	}
